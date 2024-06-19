@@ -17,6 +17,7 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 - **Fixed Space**: Each store in HashDB is limited to 2GB (e.g., accommodating up to 150 million entries of integer mapped to a 10-character string)
 - **Forced User Serialization**: Users define their serialization and deserialization methods to compact data based on user-defined classes implementing Key and Value interfaces.
 - **Operations Supported**: HashDB supports basic operations such as get, remove, and put.
+
 - **File Structure**: HashDB consists of the following files:
   - **INDEX**: Stores hash values for rapid lookup.
   - **COLLISION**: Handles collisions in the hash table.
@@ -24,7 +25,7 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
   - **COLLISION_BUBBLE**: Manages deleted records to prevent file fragmentation.
   - **DATA_BUBBLE**: Manages deleted data records similarly to COLLISION_BUBBLE.
   - **META**: Stores end pointers for each file and key-value sizes.
-![DB Structure]([http://url/to/img.png](https://github.com/prasannathapa/HashDB/blob/main/doc/structure.png?raw=true))
+![DB Structure](https://github.com/prasannathapa/HashDB/blob/main/doc/structure.png?raw=true)
 
 ### Drawbacks
 - **Iteration**: Cant iterate over the data in sorted way or can do binary floor or ceil search on data
