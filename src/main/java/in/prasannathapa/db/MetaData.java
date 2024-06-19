@@ -35,7 +35,7 @@ class MetaData implements AutoCloseable{
         this.valueSize = valueSize;
         this.entries = entries;
         this.loadFactor = loadFactor;
-        this.buckets = (int) Math.min(Integer.MAX_VALUE/Integer.BYTES,entries/loadFactor);
+        this.buckets = Math.min(Integer.MAX_VALUE/Integer.BYTES,(int)(entries/loadFactor));
 
         buffer.putInt(keySize);
         buffer.putInt(valueSize);
