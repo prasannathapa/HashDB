@@ -26,7 +26,7 @@ class MetaData implements AutoCloseable{
         for(Resource resource: Resource.values()){
             endPointers[resource.ordinal()] = buffer.getInt();
         }
-        this.buckets = (int) Math.min(Integer.MAX_VALUE/Integer.BYTES,entries/loadFactor);
+        this.buckets = Math.min(Integer.MAX_VALUE/Integer.BYTES,(int)(entries/loadFactor));
     }
 
     public MetaData(int keySize, int valueSize, int entries, float loadFactor, DBUtil dbUtil) throws IOException {
