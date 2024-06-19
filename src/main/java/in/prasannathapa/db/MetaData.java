@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-public class MetaData implements AutoCloseable{
+class MetaData implements AutoCloseable{
 
     private static final int NON_ARRAY_BYTES = Integer.BYTES * 3 + Float.BYTES;
     public static final int BYTES = NON_ARRAY_BYTES + Resource.values().length * Integer.BYTES;
@@ -15,7 +15,7 @@ public class MetaData implements AutoCloseable{
 
     public final int buckets;
 
-    private final MappedByteBuffer buffer;
+    private MappedByteBuffer buffer;
 
     public MetaData(DBUtil dbUtil) throws IOException {
         this.buffer = dbUtil.getBuffer(Resource.META, FileChannel.MapMode.READ_WRITE);
@@ -59,6 +59,7 @@ public class MetaData implements AutoCloseable{
     @Override
     public void close(){
         DBUtil.closeBuffer(buffer);
+        buffer = null;
     }
 
     public float getLoadFactor() {

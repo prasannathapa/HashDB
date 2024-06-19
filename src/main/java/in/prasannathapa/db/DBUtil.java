@@ -1,8 +1,5 @@
 package in.prasannathapa.db;
 
-import in.prasannathapa.db.data.Key;
-import in.prasannathapa.db.data.Value;
-
 import javax.naming.SizeLimitExceededException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +11,8 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 class DBUtil implements AutoCloseable{
     public final String dbName;
@@ -89,9 +88,8 @@ class DBUtil implements AutoCloseable{
                 unsafeClass = Class.forName("sun.misc.Unsafe");
                 Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");
                 unsafeField.setAccessible(true);
-                Object unsafe = unsafeField.get(null);
-                Method invokeCleaner = unsafeClass.getMethod("invokeCleaner", ByteBuffer.class);
-                System.gc();
+                unsafe = unsafeField.get(null);
+                invokeCleaner = unsafeClass.getMethod("invokeCleaner", ByteBuffer.class);
             } catch (Exception ignored) {}
         }
     }
@@ -102,6 +100,17 @@ class DBUtil implements AutoCloseable{
             try {
                 invokeCleaner.invoke(unsafe,buffer);
             } catch (IllegalAccessException | InvocationTargetException ignore) {}
+        }
+    }
+
+    public void delete() throws IOException {
+        close();
+        delete(dbName);
+    }
+    public static void delete(String dbName) throws IOException {
+        for (Resource resource : Resource.values()) {
+            String filePath = String.join(File.separator, HashDB.DB_DIR, dbName, resource.name());
+            Files.deleteIfExists(Paths.get(filePath));
         }
     }
 }

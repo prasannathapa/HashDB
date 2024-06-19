@@ -1,4 +1,4 @@
-package in.prasannathapa.db.utils;
+package utils;
 
 import java.util.*;
 

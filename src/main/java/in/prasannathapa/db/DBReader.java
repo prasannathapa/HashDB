@@ -1,6 +1,6 @@
 package in.prasannathapa.db;
 
-import in.prasannathapa.db.utils.key.CollisionRecord;
+import in.prasannathapa.db.data.CollisionRecord;
 import in.prasannathapa.db.data.Key;
 
 import java.io.IOException;
@@ -8,16 +8,15 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.InvalidKeyException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static in.prasannathapa.db.DBWriter.NOT_WRITTEN;
 
 class DBReader implements AutoCloseable {
     public final DBUtil dbUtil;
     private final MetaData metaData;
-    private final MappedByteBuffer indexReader;
-    private final MappedByteBuffer collisionReader;
-    private final MappedByteBuffer dataReader;
+    private MappedByteBuffer indexReader;
+    private MappedByteBuffer collisionReader;
+    private MappedByteBuffer dataReader;
     public DBReader(DBUtil dbUtil, MetaData metaData) throws IOException {
         this.dbUtil = dbUtil;
         this.metaData = metaData;
@@ -66,6 +65,12 @@ class DBReader implements AutoCloseable {
     }
     @Override
     public void close() throws IOException {
+        DBUtil.closeBuffer(dataReader);
+        DBUtil.closeBuffer(collisionReader);
+        DBUtil.closeBuffer(indexReader);
+        indexReader = null;
+        collisionReader = null;
+        dataReader = null;
         dbUtil.close();
     }
 }

@@ -1,6 +1,6 @@
 package in.prasannathapa.db;
 
-import in.prasannathapa.db.utils.key.CollisionRecord;
+import in.prasannathapa.db.data.CollisionRecord;
 import in.prasannathapa.db.data.Key;
 import in.prasannathapa.db.data.Value;
 
@@ -202,8 +202,9 @@ class DBWriter implements AutoCloseable{
     @Override
     public void close() {
         metaData.close();
-        for(MappedByteBuffer buffer: buffers) {
-            DBUtil.closeBuffer(buffer);
+        for (int i = 0; i < buffers.length; i++) {
+            DBUtil.closeBuffer(buffers[i]);
+            buffers[i] = null;
         }
     }
 }

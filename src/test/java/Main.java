@@ -1,12 +1,11 @@
-package in.prasannathapa;
-
 import in.prasannathapa.db.HashDB;
 import in.prasannathapa.db.data.Key;
-import in.prasannathapa.db.utils.RandomUtil;
-import in.prasannathapa.db.utils.key.IP;
-import in.prasannathapa.db.utils.key.ThreatData;
+import utils.RandomUtil;
+import utils.key.IP;
+import utils.key.ThreatData;
 
 import javax.naming.SizeLimitExceededException;
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.util.stream.IntStream;
 
@@ -16,11 +15,8 @@ public class Main {
         return new ThreatData(key.hash() % 100, RandomUtil.getRandomCategories(key.hash()), RandomUtil.allCategories);
     }
 
-    public static void main(String[] args) throws Exception {
-        int entries = 50_000_000;
-        float loadFactor = 0.5f;
-        try (HashDB db = HashDB.createDB(IP.LENGTH, ThreatData.LENGTH, entries, loadFactor, "WebrootATA")) {
-
+    void benchmarkLocal(int entries, float loadFactor) throws SizeLimitExceededException, IOException {
+        try (HashDB db = HashDB.createDB(IP.LENGTH, ThreatData.LENGTH, entries, loadFactor, "ThreatTest")) {
             System.out.println("Dump Benchmark");
             for (int x = 1; x <= 1; x++) {
                 //Benchmark this
@@ -44,7 +40,7 @@ public class Main {
             }
             //Benchmark this
             System.out.println("Read Benchmark");
-            for (int x = 1; x <= 10; x++) {
+            for (int x = 1; x <= 2; x++) {
                 long startTime = System.nanoTime();
                 IntStream.range(0, entries).parallel().mapToObj(i -> new IP(RandomUtil.generateRandomIP())).forEach(key -> {
                     try {
@@ -59,7 +55,11 @@ public class Main {
                 long endTime = System.nanoTime() - startTime;
                 RandomUtil.printStats(x, entries, endTime);
             }
+            db.delete();
         }
+    }
+    public static void main(String[] args) throws Exception {
+        new Main().benchmarkLocal(50_000_000,0.5f);
     }
 
 }

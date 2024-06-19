@@ -1,4 +1,4 @@
-package in.prasannathapa.db.utils.key;
+package in.prasannathapa.db.data;
 
 import in.prasannathapa.db.data.Key;
 

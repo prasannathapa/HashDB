@@ -24,24 +24,24 @@ public class HashDB implements AutoCloseable {
     public final String dbName;
     private final DBWriter writer;
     private final DBReader[] readers = new DBReader[cores];
-    private final DBUtil meta;
+    private final DBUtil dbUtil;
     private final AtomicInteger selector = new AtomicInteger(0);
 
     private HashDB(int keyLength, int valueLength, int size, float loadFactor, String dbName) throws IOException, SizeLimitExceededException {
         this.dbName = dbName;
-        this.meta = new DBUtil(keyLength, valueLength, loadFactor, size, dbName);
-        this.writer = new DBWriter(keyLength, valueLength, size, loadFactor, meta);
+        this.dbUtil = new DBUtil(keyLength, valueLength, loadFactor, size, dbName);
+        this.writer = new DBWriter(keyLength, valueLength, size, loadFactor, dbUtil);
         for (int i = 0; i < readers.length; i++) {
-            readers[i] = new DBReader(meta, writer.metaData);
+            readers[i] = new DBReader(dbUtil, writer.metaData);
         }
     }
 
     private HashDB(String dbName) throws IOException {
         this.dbName = dbName;
-        this.meta = new DBUtil(dbName);
-        this.writer = new DBWriter(meta);
+        this.dbUtil = new DBUtil(dbName);
+        this.writer = new DBWriter(dbUtil);
         for (int i = 0; i < readers.length; i++) {
-            readers[i] = new DBReader(meta, writer.metaData);
+            readers[i] = new DBReader(dbUtil, writer.metaData);
         }
     }
 
@@ -49,7 +49,7 @@ public class HashDB implements AutoCloseable {
     public synchronized static HashDB createDB(int keyLength, int valueLength, int size, float loadFactor, String dbName) throws SizeLimitExceededException, IOException {
         HashDB db = instanceMap.get(dbName);
         if (db != null) {
-            db.delete();
+            db.close();
         }
         db = new HashDB(keyLength, valueLength, size, loadFactor, dbName);
         instanceMap.put(dbName, db);
@@ -63,7 +63,10 @@ public class HashDB implements AutoCloseable {
         }
         return instanceMap.put(dbName, new HashDB(dbName));
     }
-
+    public static void delete(String dbName) throws IOException {
+        instanceMap.remove(dbName);
+        DBUtil.delete(dbName);
+    }
     public void put(Key key, Value value) throws SizeLimitExceededException, InvalidKeyException {
         writer.put(key, value);
     }
@@ -74,15 +77,16 @@ public class HashDB implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        meta.close();
+        dbUtil.close();
         writer.close();
         for (DBReader reader : readers) {
             reader.close();
         }
     }
 
-    private void delete() throws IOException {
+    public void delete() throws IOException {
         close();
+        dbUtil.delete();
     }
 
     public ByteBuffer get(Key key) throws InvalidKeyException {
