@@ -8,10 +8,16 @@ Traditionally, databases use B/B+ trees for efficient data retrieval, which prov
 
 ### Features
 
-- **Fast Lookup**: Achieves O(1) lookup time for retrieving data, which is faster compared to traditional databases like LMDB or Redis that typically operate with O(log(n)) lookup.
-- **Space Efficiency**: Each store in HashDB is limited to 2GB, accommodating up to 150 million entries (e.g., integer mapped to a 10-character string), which optimizes space usage.
-- **Custom Serialization**: Users define their serialization and deserialization methods to compact data based on user-defined classes implementing Key and Value interfaces.
+- **O(1) Fast Lookup**: Achieves O(1) lookup time for retrieving data, which is faster compared to traditional databases like LMDB or Redis that typically operate with O(log(n)) lookup.
+-  **O(1) Fast Insert**: Achieves O(1) insert time for retrieving data, which is faster compared to traditional databases like LMDB or Redis that typically operate with O(log(n)) lookup.
+- **Fixed Space**: Each store in HashDB is limited to 2GB (e.g., accommodating up to 150 million entries of integer mapped to a 10-character string)
+- **Forced User Serialization**: Users define their serialization and deserialization methods to compact data based on user-defined classes implementing Key and Value interfaces.
 - **Operations Supported**: HashDB supports basic operations such as get, remove, and put.
+
+### Drawbacks
+- **Iteration**: Cant iterate over the data in sorted way or can do binary floor or ceil search on data
+- **Index Size**: Index size will be larger than traditional trees and needs to be in a seperate file.
+
 
 ### Example Usage
 
