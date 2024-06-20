@@ -8,7 +8,7 @@ Traditionally, databases use B/B+ trees for efficient data retrieval, which prov
 
 ## Purpose
 
-HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B+ trees) for O(1) lookup performance, making it ideal for scenarios where speed and simplicity in key-value data operations are paramount.
+HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B+ trees) for O(1) lookup performance, making it ideal for scenarios where speed and simplicity in key-data data operations are paramount.
 
 ### Features
 
@@ -21,10 +21,10 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 - **File Structure**: HashDB consists of the following files:
   - **INDEX**: Stores hash values for rapid lookup.
   - **COLLISION**: Handles collisions in the hash table.
-  - **DATA**: Stores the actual key-value data.
+  - **DATA**: Stores the actual key-data data.
   - **COLLISION_BUBBLE**: Manages deleted records to prevent file fragmentation.
   - **DATA_BUBBLE**: Manages deleted data records similarly to COLLISION_BUBBLE.
-  - **META**: Stores end pointers for each file and key-value sizes.
+  - **META**: Stores end pointers for each file and key-data sizes.
 ![DB Structure](https://github.com/prasannathapa/HashDB/blob/main/doc/structure.png?raw=true)
 
 ### Drawbacks

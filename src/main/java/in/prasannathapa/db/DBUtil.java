@@ -28,7 +28,7 @@ class DBUtil implements AutoCloseable{
             channels[resource.ordinal()] = resourceFiles[resource.ordinal()].getChannel();
         }
     }
-    public DBUtil(int keyLength, int valueLength, float loadFactor, int entries, String dbName) throws IOException, SizeLimitExceededException {
+    public DBUtil(int keyLength, int valueLength, int entries, String dbName) throws IOException, SizeLimitExceededException {
         this.dbName = dbName;
 
         long recordSize = keyLength + valueLength;
@@ -36,9 +36,9 @@ class DBUtil implements AutoCloseable{
         if(fileSize > Integer.MAX_VALUE){
             throw new SizeLimitExceededException("file size required to store "+entries+" entries of "+recordSize+" bytes (key+value) exceeds 2GB");
         }
-        int buckets = (int) Math.min((long) (entries/loadFactor),Integer.MAX_VALUE/Integer.BYTES);
+        int buckets = MetaData.getBucketSize(entries);
         int bucketSize = buckets * Integer.BYTES;
-        int collisionRecordSize = keyLength + Integer.BYTES * 2;
+        int collisionRecordSize = Integer.BYTES * 2;
         int collisionMaxFileSize = entries * collisionRecordSize; //Assuming everything collided
         diskSize[Resource.DATA.ordinal()] = (int) fileSize;
         diskSize[Resource.INDEX.ordinal()] = bucketSize;
@@ -104,7 +104,6 @@ class DBUtil implements AutoCloseable{
     }
 
     public void delete() throws IOException {
-        close();
         delete(dbName);
     }
     public static void delete(String dbName) throws IOException {

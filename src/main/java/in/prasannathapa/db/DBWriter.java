@@ -1,99 +1,76 @@
 package in.prasannathapa.db;
 
-import in.prasannathapa.db.data.CollisionRecord;
-import in.prasannathapa.db.data.Key;
-import in.prasannathapa.db.data.Value;
+import in.prasannathapa.db.data.BucketNode;
+import in.prasannathapa.db.data.Data;
 
 import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.security.InvalidKeyException;
 
-class DBWriter implements AutoCloseable{
+import static in.prasannathapa.db.data.BucketNode.NOT_WRITTEN;
 
-    public static final int NOT_WRITTEN = -1;
+class DBWriter<K extends Data, V extends Data> implements AutoCloseable{
+
     public final MetaData metaData;
     private final MappedByteBuffer[] buffers = new MappedByteBuffer[Resource.values().length];
 
-    private DBWriter(MetaData metaData, DBUtil metaDB) throws IOException {
+    public DBWriter(MetaData metaData, DBUtil dbUtil) throws IOException {
         this.metaData = metaData;
         for(Resource resource: Resource.values()){
             if(resource != Resource.META){
-                this.buffers[resource.ordinal()] = metaDB.getBuffer(resource, FileChannel.MapMode.READ_WRITE);
+                this.buffers[resource.ordinal()] = dbUtil.getBuffer(resource, FileChannel.MapMode.READ_WRITE);
             }
         }
     }
-    public DBWriter(DBUtil metaDB) throws IOException {
-        this(new MetaData(metaDB),metaDB);
-    }
-    public DBWriter(int keySize, int valueSize, int entries, float loadFactor, DBUtil metaDB) throws IOException {
-        this(new MetaData(keySize, valueSize, entries, loadFactor, metaDB), metaDB);
-        for (int i = 0; i < metaData.buckets; i++) {
+
+    public DBWriter(MetaData metaData, DBUtil dbUtil, boolean clearIndex) throws IOException {
+        this(metaData, dbUtil);
+        for (int i = 0; i < metaData.getBuckets() && clearIndex; i++) {
             buffers[Resource.INDEX.ordinal()].putInt(NOT_WRITTEN);
         }
     }
 
-    public synchronized void remove(Key key) throws InvalidKeyException {
-        byte[] keyBytes = key.write();
-        if(key.size() != keyBytes.length || metaData.keySize != key.size()) {
-            throw new InvalidKeyException("key size is not equal to written bytes or metadata");
-        }
-        int bucket = key.hash() % metaData.buckets;
+    public synchronized void remove(K key) {
+        Data dbKey = new Data(metaData.getKeySize());
+        int bucket = metaData.getBucket(key);
         int bucketPointer = bucket * Integer.BYTES;
         MappedByteBuffer idxBuffer = buffers[Resource.INDEX.ordinal()].position(bucketPointer);
         MappedByteBuffer dataBuffer = buffers[Resource.DATA.ordinal()];
-        CollisionRecord record = new CollisionRecord(key.size());
         int pos = idxBuffer.getInt();
         if(pos == NOT_WRITTEN){
             return;
         } else if(pos >= 0) {
-            dataBuffer.position(pos);
-            record.read(dataBuffer);
-            if(record.matches(keyBytes)) {
+            dbKey.read(dataBuffer,pos);
+            if(dbKey.matches(key)) {
                 idxBuffer.putInt(bucketPointer, NOT_WRITTEN);
                 createBubble(Resource.DATA_BUBBLE, pos);
             }
         } else {
-            pos = (pos == Integer.MIN_VALUE ? 0 : pos);
-            int current = -pos;
-            MappedByteBuffer collisionBuffer = buffers[Resource.COLLISION.ordinal()].position(current);
-            record.read(collisionBuffer);
+            pos = (pos == Integer.MIN_VALUE ? 0 : -pos);
+            MappedByteBuffer collisionBuffer = buffers[Resource.COLLISION.ordinal()];
+            BucketNode linkedList = new BucketNode(metaData.getKeySize(), pos,dataBuffer,collisionBuffer);
             // Handle removal of the head node
-            if(record.matches(keyBytes)) {
+            if(linkedList.matches(key)) {
                 //if -1, write -1 else invert to neg pointer
-                idxBuffer.putInt(bucketPointer,-Math.abs(record.next));
-                createBubble(Resource.COLLISION_BUBBLE,current);
+                idxBuffer.putInt(bucketPointer,-Math.abs(linkedList.nextPosition));
+                createBubble(Resource.COLLISION_BUBBLE,linkedList.currentPosition);
                 return;
             }
             // Traverse the linked list to find and remove the node
-            int prevRecordPos = current;
-            while (record.next != NOT_WRITTEN) {
-                int nextPos = record.next;
-                collisionBuffer.position(nextPos);
-                record.read(collisionBuffer);
-
-                if (record.matches(keyBytes)) {
-                    // Remove currentRecord from the linked list
-                    collisionBuffer.position(prevRecordPos + key.size() + Integer.BYTES);
-                    collisionBuffer.putInt(record.next);
-                    createBubble(Resource.COLLISION_BUBBLE, record.position);
+            while (linkedList.hasNext()) {
+                linkedList.readNext();
+                if (linkedList.matches(key)) {
+                    createBubble(Resource.COLLISION_BUBBLE, linkedList.deleteNode());
                     return;
                 }
-                prevRecordPos = nextPos;
             }
         }
+        metaData.update();
     }
-    public synchronized void put(Key key, Value value) throws InvalidKeyException, SizeLimitExceededException {
-        byte[] keyBytes = key.write();
-        byte[] valueBytes = value.write();
-        if(key.size() != keyBytes.length || key.size() != metaData.keySize) {
-            throw new InvalidKeyException("key size is not equal to written bytes");
-        } else if (value.size() != valueBytes.length || value.size() != metaData.valueSize) {
-            throw new InvalidKeyException("value size is not equal to written bytes");
-        }
+    public synchronized void put(K key, V value) throws SizeLimitExceededException {
         int bubble;
-        int bucket = key.hash() % metaData.buckets;
+        int bucket = metaData.getBucket(key);
         int bucketPointer = bucket * Integer.BYTES;
         MappedByteBuffer idxBuffer = buffers[Resource.INDEX.ordinal()];
         MappedByteBuffer dataBuffer = buffers[Resource.DATA.ordinal()];
@@ -102,79 +79,82 @@ class DBWriter implements AutoCloseable{
         int pos = idxBuffer.getInt(bucketPointer);
         if(pos == NOT_WRITTEN){
             bubble = burstBubble(Resource.DATA_BUBBLE);
-            if(bubble >= metaData.entries * (key.size() + value.size())){
+            if(bubble >= metaData.getDataFileSizeLimit()){
                 throw new SizeLimitExceededException("Max entries reached");
             }
-            dataBuffer.position(bubble).put(keyBytes).put(valueBytes);
+            dataBuffer.position(bubble);
+            key.write(dataBuffer);
+            value.write(dataBuffer);
             idxBuffer.putInt(bucketPointer,bubble);
-            if(metaData.getEndPointer(Resource.DATA) < dataBuffer.position()){
-                metaData.setEndPointer(Resource.DATA, dataBuffer.position());
+            int position =dataBuffer.position();
+            if(metaData.getEndPointer(Resource.DATA) < position){
+                metaData.setEndPointer(Resource.DATA, position);
             }
         } else if (pos >= 0){
-            byte[] existingKey = new byte[key.size()];
-            dataBuffer.position(pos);
-            dataBuffer.get(existingKey);
+            Data existingKey = new Data(metaData.getKeySize());
+            existingKey.read(dataBuffer,pos);
             if(key.matches(existingKey)){
-                dataBuffer.put(valueBytes);
+                value.write(dataBuffer);
                 //Its overwrite no need to update end pointer
             } else {
                 bubble = burstBubble(Resource.DATA_BUBBLE);
-                if(bubble >= metaData.entries * (key.size() + value.size())){
+                if(bubble >= metaData.getDataFileSizeLimit()){
                     throw new SizeLimitExceededException("Max entries reached");
                 }
                 int colBubble = burstBubble(Resource.COLLISION_BUBBLE);
                 idxBuffer.putInt(bucketPointer, colBubble == 0 ? Integer.MIN_VALUE : -colBubble);
                 collisionBuffer.position(colBubble)
-                        .put(existingKey).putInt(pos).putInt(NOT_WRITTEN);
+                        .putInt(NOT_WRITTEN).putInt(pos);
                 if (collisionBuffer.position() > metaData.getEndPointer(Resource.COLLISION)) {
                     metaData.setEndPointer(Resource.COLLISION, collisionBuffer.position());
                 }
                 int nextBubble = burstBubble(Resource.COLLISION_BUBBLE);
-                collisionBuffer.position(colBubble + existingKey.length + Integer.BYTES)
+                collisionBuffer.position(colBubble)
                         .putInt(nextBubble) //Replace End Node
                         .position(nextBubble)
-                        .put(keyBytes).putInt(bubble).putInt(NOT_WRITTEN);
+                        .putInt(NOT_WRITTEN).putInt(bubble);
                 if (collisionBuffer.position() > metaData.getEndPointer(Resource.COLLISION)) {
                     metaData.setEndPointer(Resource.COLLISION, collisionBuffer.position());
                 }
-                dataBuffer.position(bubble).put(keyBytes).put(valueBytes);
+                dataBuffer.position(bubble);
+                key.write(dataBuffer);
+                value.write(dataBuffer);
                 if(dataBuffer.position() > metaData.getEndPointer(Resource.DATA)){
                     metaData.setEndPointer(Resource.DATA,dataBuffer.position());
                 }
             }
         } else {
-            pos = (pos == Integer.MIN_VALUE ? 0 : pos);
-            int head = -pos; //Negative denotes collision, -(-value) will make it positive
-            CollisionRecord record = new CollisionRecord(key.size());
-            record.read(collisionBuffer.position(head));
-            while(record.next != NOT_WRITTEN && !record.matches(keyBytes)) {
-                head = record.next;
-                record.read(collisionBuffer.position(head));
+            pos = (pos == Integer.MIN_VALUE ? 0 : -pos);
+            BucketNode record = new BucketNode(metaData.getKeySize(), pos,dataBuffer,collisionBuffer);
+            while(record.hasNext() && !record.matches(key)) {
+                record.readNext();
             }
             //Key exists, update existing record
-            if(record.matches(keyBytes)){
-                dataBuffer.position(record.pointer + key.size());
-                dataBuffer.put(valueBytes);
+            if(record.matches(key)){
+                record.updateData(key,value);
                 //No need to update end pointer since its overwrite
             } else {
                 //Insert new Record
                 bubble = burstBubble(Resource.DATA_BUBBLE);
-                if(bubble >= metaData.entries * (key.size() + value.size())){
+                if(bubble >= metaData.getDataFileSizeLimit()){
                     throw new SizeLimitExceededException("Max entries reached");
                 }
                 int colBubble = burstBubble(Resource.COLLISION_BUBBLE);
-                dataBuffer.position(bubble).put(keyBytes).put(valueBytes);
+                dataBuffer.position(bubble);
+                key.write(dataBuffer);
+                value.write(dataBuffer);
                 collisionBuffer.position(colBubble)
-                        .put(keyBytes).putInt(bubble).putInt(NOT_WRITTEN);
+                        .putInt(NOT_WRITTEN).putInt(bubble);
                 if(collisionBuffer.position() > metaData.getEndPointer(Resource.COLLISION)){
                     metaData.setEndPointer(Resource.COLLISION,collisionBuffer.position());
                 }
                 if(dataBuffer.position() > metaData.getEndPointer(Resource.DATA)){
                     metaData.setEndPointer(Resource.DATA,dataBuffer.position());
                 }
-                collisionBuffer.putInt(record.position + key.size() + Integer.BYTES, colBubble);
+                record.updateNext(colBubble);
             }
         }
+        metaData.update();
     }
 
     private synchronized void createBubble(Resource resource, int position) {
@@ -201,10 +181,8 @@ class DBWriter implements AutoCloseable{
 
     @Override
     public void close() {
-        metaData.close();
-        for (int i = 0; i < buffers.length; i++) {
-            DBUtil.closeBuffer(buffers[i]);
-            buffers[i] = null;
+        for (MappedByteBuffer buffer : buffers) {
+            DBUtil.closeBuffer(buffer);
         }
     }
 }

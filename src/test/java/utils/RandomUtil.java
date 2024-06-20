@@ -18,9 +18,9 @@ public class RandomUtil {
 
         return ipBuilder.toString();
     }
-    public static Set<String> getRandomCategories(int seed) {
+    public static Set<String> getRandomCategories(long seed) {
         int[] indices = new int[3];
-        int baseIndex = Math.abs(seed) % cat.length;
+        int baseIndex = (int) (Math.abs(seed) % cat.length);
         for (int i = 0; i < 3; i++) {
             indices[i] = (baseIndex + i * 7) % cat.length; // Offset by a prime number (7)
             while (i > 0 && indices[i] == indices[i - 1]) {

@@ -1,15 +1,18 @@
 package utils.key;
 
-import in.prasannathapa.db.data.Value;
+import in.prasannathapa.db.data.Data;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
-public class ThreatData implements Value {
+public class ThreatData extends Data {
 
-    public static final int LENGTH = 3;
-    private final byte[] data = new byte[LENGTH];
+    public static final int REP_LENGTH = 1;
+    public static final int CAT_LENGTH = 1;
+    public static final int LENGTH = REP_LENGTH + CAT_LENGTH;
+
     public ThreatData(int reputation, Set<String> categories, Collection<String> allCategories) {
+        super(LENGTH);
         if (reputation < 0 || reputation > 100) {
             throw new IllegalArgumentException("Reputation must be between 0 and 100");
         } else if (categories.size() > allCategories.size()) {
@@ -17,7 +20,7 @@ public class ThreatData implements Value {
         }
 
         int index = 0;
-        BitSet categoryFilter = new BitSet(2 * Byte.SIZE);
+        BitSet categoryFilter = new BitSet(CAT_LENGTH);
         for (String category : allCategories) {
             if (categories.contains(category)) {
                 categoryFilter.set(index);
@@ -26,17 +29,11 @@ public class ThreatData implements Value {
         }
         byte[] bitSetBytes = categoryFilter.toByteArray();
         data[0] = (byte) reputation;
-        System.arraycopy(bitSetBytes, 0, data, 1, Math.min(bitSetBytes.length, 2));
+        System.arraycopy(bitSetBytes, 0, data, 1, Math.min(bitSetBytes.length, CAT_LENGTH));
     }
-    public ThreatData() {}
 
-    public static ThreatData readFrom(ByteBuffer byteBuffer) {
-        ThreatData threatData = null;
-        if(byteBuffer != null){
-            threatData = new ThreatData();
-            threatData.read(byteBuffer);
-        }
-        return threatData;
+    public ThreatData(Data data) {
+        super(data);
     }
 
     public int getReputation(){
@@ -44,7 +41,7 @@ public class ThreatData implements Value {
     }
     public List<String> getCategories(Iterable<String> allCategories) {
         List<String> setCategories = new ArrayList<>();
-        BitSet categoryFilter = BitSet.valueOf(new byte[]{data[1], data[2]});
+        BitSet categoryFilter = BitSet.valueOf(new byte[]{data[1]});
         int index = 0;
         for (String category : allCategories) {
             if (categoryFilter.get(index)) {
@@ -54,21 +51,6 @@ public class ThreatData implements Value {
         }
         return setCategories;
     }
-    @Override
-    public int size() {
-        return data.length;
-    }
-
-    @Override
-    public byte[] write() {
-        return data.clone(); // Return a copy to avoid unintended modifications
-    }
-
-    @Override
-    public void read(ByteBuffer buffer) {
-        buffer.get(data); // Read bytes directly into the data array
-    }
-
     public String toString(Iterable<String> allCategories) {
         return "["+data[0]+"]"+Arrays.toString(getCategories(allCategories).toArray(new String[0]));
     }
