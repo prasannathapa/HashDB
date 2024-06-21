@@ -1,6 +1,4 @@
-package utils.key;
-
-import in.prasannathapa.db.data.MappableData;
+package in.prasannathapa.db.data;
 
 import java.nio.ByteBuffer;
 
@@ -16,12 +14,15 @@ public class IP extends MappableData {
             data[i] = (byte) part;
         }
     }
+    public IP(Data data) {
+        super(data);
+    }
 
     public IP() {
         super(LENGTH);
     }
 
-    public String get(){
+    public String toString(){
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 4; i++) {
             int octet = data[i] & 0xFF;
