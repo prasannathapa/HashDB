@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HashDB<K extends FixedRecord, V extends FixedRecord> {
     public static final String DB_DIR = System.getProperty("user.home") + File.separator + "HashDB"; //NO I18N
     public static final int cores = Runtime.getRuntime().availableProcessors();
-    private static final Map<String, HashDB> instanceMap = new Hashtable<>();
+    private static final Map<String, HashDB<FixedRecord,FixedRecord>> instanceMap = new Hashtable<>();
 
     static {
         new File(DB_DIR).mkdirs();
@@ -48,12 +48,12 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
 
     //Creates a new Instance, deletes the old one if already existing
     public synchronized static <K extends FixedRecord, V extends FixedRecord> HashDB<K, V> createDB(int keyLength, int valueLength, int size, String dbName) throws SizeLimitExceededException, IOException {
-        HashDB<?, ?> existingDb = instanceMap.get(dbName);
+        HashDB<FixedRecord, FixedRecord> existingDb = instanceMap.get(dbName);
         if (existingDb != null) {
             existingDb.close();
         }
         HashDB<K, V> db = new HashDB<>(keyLength, valueLength, size, dbName);
-        instanceMap.put(dbName, db);
+        instanceMap.put(dbName, (HashDB<FixedRecord, FixedRecord>) db);
         return db;
     }
     public synchronized static void closeDB(String dbName) throws IOException {
@@ -64,13 +64,13 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
         instanceMap.remove(dbName);
     }
     public static <K extends FixedRecord, V extends FixedRecord> HashDB<K, V> readFrom(String dbName) throws IOException {
-        HashDB<K,V>  db = instanceMap.get(dbName);
-        if (db != null) {
-            return db;
+        HashDB<FixedRecord,FixedRecord>  db = instanceMap.get(dbName);
+        if (db == null) {
+            db = new HashDB<>(dbName);
+            instanceMap.put(dbName, db);
         }
-        db = new HashDB<>(dbName);
-        instanceMap.put(dbName, db);
-        return db;
+
+        return (HashDB<K, V>) db;
     }
     public static void deleteDB(String dbName) throws IOException {
         HashDB db = instanceMap.get(dbName);
@@ -99,5 +99,29 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
 
     public FixedRecord get(K key) {
         return readers[selector.getAndUpdate(i -> (i + 1) % cores)].get(key);
+    }
+    public FixedRecord[] getAll(K[] keys) {
+        FixedRecord[] records = new FixedRecord[keys.length];
+        DBReader<K> reader = readers[selector.getAndUpdate(i -> (i + 1) % cores)];
+        for(int i = 0; i < keys.length; i++) {
+            records[i] = reader.get(keys[i]);
+        }
+        return records;
+    }
+
+    public FixedRecord[] removeAll(K[] keys) {
+        FixedRecord[] records = new FixedRecord[keys.length];
+        DBReader<K> reader = readers[selector.getAndUpdate(i -> (i + 1) % cores)];
+        for(int i = 0; i < keys.length; i++) {
+            records[i] = reader.get(keys[i]);
+        }
+        return records;
+    }
+
+    public void putAll(K[] keys, V[] values) throws SizeLimitExceededException {
+        assert keys.length == values.length;
+        for(int i = 0; i < keys.length; i++) {
+            writer.put(keys[i],values[i]);
+        }
     }
 }
