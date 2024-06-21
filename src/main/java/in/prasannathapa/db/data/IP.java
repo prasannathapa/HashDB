@@ -3,7 +3,7 @@ package in.prasannathapa.db.data;
 import java.nio.ByteBuffer;
 
 
-public class IP extends MappableData {
+public class IP extends Data {
 
     public static final int LENGTH = Integer.BYTES;
     public IP(String ip) {
@@ -35,7 +35,7 @@ public class IP extends MappableData {
     }
 
     @Override
-    public int mapToInt() {
+    public int hashCode() {
         return ByteBuffer.wrap(data).getInt();
     }
 }
