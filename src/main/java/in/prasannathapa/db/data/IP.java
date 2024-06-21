@@ -14,6 +14,9 @@ public class IP extends Data {
             data[i] = (byte) part;
         }
     }
+
+    public IP() {super(LENGTH);}
+
     public static IP wrap(FixedRecord data) {
         if(data == null || data.size() != LENGTH) {
             return null;
