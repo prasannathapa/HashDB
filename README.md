@@ -35,32 +35,23 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 ### Example Usage
 
 ```java
-try (HashDB db = HashDB.createDB(IP.LENGTH, ThreatData.LENGTH, entries, loadFactor, "ThreatTest")) {
-    IntStream.range(0, entries).parallel().mapToObj(i -> new IP(RandomUtil.generateRandomIP())).forEach(key -> {
-        try {
-            db.put(key, generateThreat(key));
-        } catch (SizeLimitExceededException | InvalidKeyException e) {
-            System.out.println(e.getMessage());
-        }
-    });
-    IntStream.range(0, entries/10).parallel().mapToObj(i -> new IP(RandomUtil.generateRandomIP())).forEach(key -> {
-        try {
-            db.remove(key);
-        } catch (InvalidKeyException e) {
-            System.out.println(e.getMessage());
-        }
-    });
-    long startTime = System.nanoTime();
-    IntStream.range(0, entries).parallel().mapToObj(i -> new IP(RandomUtil.generateRandomIP())).forEach(key -> {
-        try {
-            ThreatData data = ThreatData.readFrom(db.get(key));
-            // Further processing if needed
-        } catch (InvalidKeyException e) {
-            System.out.println(e.getMessage());
-        }
-    });
-    db.delete(); // Clean up after usage
-}
+    HashDB<IP,ThreatData> db = HashDB.createDB(IP.LENGTH, ThreatData.LENGTH, 1000, "TestDB");
+    IP ip1 = new IP("129.168.2.1");
+    IP ip2 = new IP("129.168.2.2");
+
+    db.put(ip1, generateThreat(ip1));
+    db.put(ip2, generateThreat(ip2));
+
+    db.remove(ip2);
+
+    Data data = db.get(ip1);
+    System.out.println(new ThreatData(data).toString(RandomUtil.allCategories)); //ThreatData
+
+    data = db.get(ip2); //[76][Exploit, Phishing, Ransomware]
+    System.out.println(data); //Null
+    db.close();
+    db.delete();
+    
 ```
 
 This example demonstrates how to create, populate, and read from a HashDB instance.
