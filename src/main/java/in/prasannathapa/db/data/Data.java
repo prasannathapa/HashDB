@@ -7,7 +7,7 @@ public class Data extends FixedRecord{
     public Data(FixedRecord data) {
         super(data);
     }
-
+    public Data() {}
     @Override
     protected void onUpdate(byte[] data) {}
 }
