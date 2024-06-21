@@ -98,11 +98,11 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
     }
 
     public FixedRecord get(K key) {
-        return readers[selector.getAndUpdate(i -> (i + 1) % cores)].get(key);
+        return readers[selector.updateAndGet(i -> (i + 1) % cores)].get(key);
     }
     public FixedRecord[] getAll(K[] keys) {
         FixedRecord[] records = new FixedRecord[keys.length];
-        DBReader<K> reader = readers[selector.getAndUpdate(i -> (i + 1) % cores)];
+        DBReader<K> reader = readers[selector.updateAndGet(i -> (i + 1) % cores)];
         for(int i = 0; i < keys.length; i++) {
             records[i] = reader.get(keys[i]);
         }
@@ -111,9 +111,8 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
 
     public FixedRecord[] removeAll(K[] keys) {
         FixedRecord[] records = new FixedRecord[keys.length];
-        DBReader<K> reader = readers[selector.getAndUpdate(i -> (i + 1) % cores)];
         for(int i = 0; i < keys.length; i++) {
-            records[i] = reader.get(keys[i]);
+            records[i] = writer.remove(keys[i]);
         }
         return records;
     }
