@@ -15,13 +15,13 @@ public class IP extends Data {
         }
     }
     public static IP wrap(FixedRecord data) {
-        if(data == null) {
+        if(data == null || data.size() != LENGTH) {
             return null;
         }
-        return new IP(data.data);
+        return new IP(data);
     }
 
-    private IP(byte[] data) {
+    private IP(FixedRecord data) {
         super(data);
     }
 

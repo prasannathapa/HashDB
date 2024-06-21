@@ -23,7 +23,7 @@ class DBReader<K extends FixedRecord> implements AutoCloseable {
 
     }
 
-    public synchronized Data get(K key) {
+    public synchronized FixedRecord get(K key) {
         Data dbKey = new Data(metaData.getKeySize());
         int bucket = metaData.getBucket(key);
         int bucketPointer = bucket * Integer.BYTES;
@@ -34,7 +34,7 @@ class DBReader<K extends FixedRecord> implements AutoCloseable {
         } else if(pos >= 0) {
             dbKey.read(dataReader,pos);
             if(key.matches(dbKey)){
-                Data value = new Data(metaData.getValueSize());
+                FixedRecord value = new Data(metaData.getValueSize());
                 value.read(dataReader);
                 return value;
             }
@@ -45,7 +45,7 @@ class DBReader<K extends FixedRecord> implements AutoCloseable {
                 record.readNext();
             }
             if(record.matches(key)){
-                Data value = new Data(metaData.getValueSize());
+                FixedRecord value = new Data(metaData.getValueSize());
                 value.read(dataReader,record.dataPointer + metaData.getKeySize());
                 return value;
             }

@@ -9,15 +9,16 @@ import java.util.Arrays;
 
 public abstract class FixedRecord implements Externalizable {
     protected byte[] data;
-    private int size;
+    private int size = 0;
 
     public FixedRecord(int size){
         this.data = new byte[size];
         this.size = data.length;
     }
-    public FixedRecord(byte[] data){
-        this.data = data;
-        this.size = data.length;
+    public FixedRecord(FixedRecord data){
+        this.data = data.data;
+        this.size = data.data.length;
+        onUpdate(data.data);
     }
     public FixedRecord() {}
 
@@ -60,5 +61,8 @@ public abstract class FixedRecord implements Externalizable {
         data = new byte[size];
         in.read(data);
         onUpdate(data);
+    }
+    public final int size(){
+        return size;
     }
 }

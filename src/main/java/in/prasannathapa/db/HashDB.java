@@ -91,7 +91,7 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> implements Aut
         util.delete();
     }
 
-    public Data get(K key) {
+    public FixedRecord get(K key) {
         return readers[selector.getAndUpdate(i -> (i + 1) % cores)].get(key);
     }
 }
