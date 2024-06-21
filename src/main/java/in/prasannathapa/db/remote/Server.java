@@ -2,7 +2,6 @@ package in.prasannathapa.db.remote;
 
 import in.prasannathapa.db.HashDB;
 import in.prasannathapa.db.data.FixedRecord;
-import in.prasannathapa.db.data.IP;
 
 import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
@@ -40,6 +39,11 @@ public class Server extends UnicastRemoteObject implements RemoteHashDB{
     @Override
     public void createDB(String dataSpace, int keySize, int valueSize, int maxEntries) throws SizeLimitExceededException, IOException {
         HashDB.createDB(keySize, valueSize, 1000, dataSpace);
+    }
+
+    @Override
+    public void deleteDB(String dataSpace) throws IOException {
+        HashDB.deleteDB(dataSpace);
     }
 
     public static void main(String[] args) {
