@@ -35,25 +35,34 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 ### Example Usage
 
 ```java
-HashDB<IP,IP> db = HashDB.createDB(IP.LENGTH, IP.LENGTH, 1000, "TestDB");
+import in.prasannathapa.db.HashDB;
+import in.prasannathapa.db.data.IP;
 
-IP ip1 = new IP("129.168.2.1");
-IP ip2 = new IP("129.168.2.2");
+public class Main {
 
-db.put(ip1, new IP("99.99.29.19"));
-db.put(ip2,  new IP("0.0.0.0"));
+  public static void main(String[] args) throws Exception {
+    String dbName = "TestDB";
+    HashDB<IP, IP> db = HashDB.createDB(IP.LENGTH, IP.LENGTH, 1000, dbName);
 
-db.remove(ip2);
+    IP ip1 = new IP("129.168.2.1");
+    IP ip2 = new IP("129.168.2.2");
 
-Data data = db.get(ip1);
-System.out.println(new IP(data)); //99.99.29.19
+    db.put(ip1, new IP("99.99.29.19"));
+    db.put(ip2, new IP("0.0.0.0"));
+    HashDB.closeDB(dbName);
 
-data = db.get(ip2); //null
-System.out.println(data); //Null
+    db = HashDB.readFrom(dbName);
+    System.out.println(IP.wrap(db.remove(ip2))); //0.0.0.0
 
-db.close();
-db.delete();
-    
+    IP data = IP.wrap(db.get(ip1));
+    System.out.println(data); //99.99.29.19
+
+    data = IP.wrap(db.get(ip2));
+    System.out.println(data); //Null
+
+    HashDB.deleteDB(dbName);
+  }
+}
 ```
 
 This example demonstrates how to create, populate, and read from a HashDB instance.
