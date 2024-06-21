@@ -35,22 +35,24 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 ### Example Usage
 
 ```java
-    HashDB<IP,ThreatData> db = HashDB.createDB(IP.LENGTH, ThreatData.LENGTH, 1000, "TestDB");
-    IP ip1 = new IP("129.168.2.1");
-    IP ip2 = new IP("129.168.2.2");
+HashDB<IP,IP> db = HashDB.createDB(IP.LENGTH, IP.LENGTH, 1000, "TestDB");
 
-    db.put(ip1, generateThreat(ip1));
-    db.put(ip2, generateThreat(ip2));
+IP ip1 = new IP("129.168.2.1");
+IP ip2 = new IP("129.168.2.2");
 
-    db.remove(ip2);
+db.put(ip1, new IP("99.99.29.19"));
+db.put(ip2,  new IP("0.0.0.0"));
 
-    Data data = db.get(ip1);
-    System.out.println(new ThreatData(data).toString(RandomUtil.allCategories)); //ThreatData
+db.remove(ip2);
 
-    data = db.get(ip2); //[76][Exploit, Phishing, Ransomware]
-    System.out.println(data); //Null
-    db.close();
-    db.delete();
+Data data = db.get(ip1);
+System.out.println(new IP(data)); //99.99.29.19
+
+data = db.get(ip2); //null
+System.out.println(data); //Null
+
+db.close();
+db.delete();
     
 ```
 
