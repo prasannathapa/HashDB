@@ -52,6 +52,7 @@ public class Server extends UnicastRemoteObject implements RemoteHashDB{
             Registry registry = LocateRegistry.createRegistry(port);
             registry.bind(HashDB.class.getName(), obj);
             System.out.println("Server Started");
+            System.out.println("bind: "+HashDB.class.getName() +" port: "+port);
         } catch (Exception e) {
             System.err.println("Server exception: " + e);
         }
