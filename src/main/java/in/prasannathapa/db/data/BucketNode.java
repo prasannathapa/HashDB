@@ -2,11 +2,11 @@ package in.prasannathapa.db.data;
 
 import java.nio.ByteBuffer;
 
-public class BucketNode extends Data {
+public class BucketNode extends FixedRecord {
     public static final int NOT_WRITTEN = -1;
     public static final int BYTES = Integer.BYTES * 2;
     public int dataPointer, previousPosition, currentPosition, nextPosition;
-    private final Data key;
+    private final FixedRecord key;
     private boolean keyCached = false;
     private final ByteBuffer dataBuffer, collisionBuffer;
     public BucketNode(int keySize, int head, ByteBuffer dataBuffer, ByteBuffer collisionBuffer) {
@@ -28,7 +28,7 @@ public class BucketNode extends Data {
 
 
     @Override
-    public boolean matches(Data otherKey) {
+    public boolean matches(FixedRecord otherKey) {
         if(!keyCached) {
             key.read(dataBuffer,dataPointer);
             keyCached = true;
@@ -57,7 +57,7 @@ public class BucketNode extends Data {
     public void updatePrevious(int nextPosition) {
         collisionBuffer.putInt(previousPosition,nextPosition);
     }
-    public void updateData(Data key, Data value){
+    public void updateData(FixedRecord key, FixedRecord value){
         dataBuffer.position(dataPointer);
         key.write(dataBuffer);
         value.write(dataBuffer);

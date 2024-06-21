@@ -1,12 +1,11 @@
 package in.prasannathapa.db;
 
-
-import in.prasannathapa.db.data.Data;
+import in.prasannathapa.db.data.FixedRecord;
 
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 
-class MetaData extends Data implements AutoCloseable{
+class MetaData extends FixedRecord implements AutoCloseable{
 
     private static final int DATA_BYTES = Integer.BYTES * 3;
     public static final int ARRAY_BYTES =  Resource.values().length * Integer.BYTES;
@@ -53,7 +52,7 @@ class MetaData extends Data implements AutoCloseable{
         endPointers[resource.ordinal()] =  -endPointer;
     }
 
-    public int getBucket(Data key) {
+    public int getBucket(FixedRecord key) {
         return (int) (((long)Integer.MAX_VALUE + key.hashCode()) % buckets);
     }
 

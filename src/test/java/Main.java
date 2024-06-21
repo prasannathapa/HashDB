@@ -17,10 +17,10 @@ public class Main {
         db.remove(ip2);
 
         Data data = db.get(ip1);
-        System.out.println(new IP(data)); //99.99.29.19
+        System.out.println(IP.wrap(db.get(ip1))); //99.99.29.19
 
         data = db.get(ip2); //null
-        System.out.println(data); //Null
+        System.out.println(db.get(ip1)); //Null
 
         db.close();
         db.delete();

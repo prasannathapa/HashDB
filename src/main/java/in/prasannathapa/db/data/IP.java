@@ -9,17 +9,20 @@ public class IP extends Data {
     public IP(String ip) {
         super(LENGTH);
         String[] parts = ip.split("\\.");
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < LENGTH; i++) {
             int part = Integer.parseInt(parts[i]);
             data[i] = (byte) part;
         }
     }
-    public IP(Data data) {
-        super(data);
+    public static IP wrap(FixedRecord data) {
+        if(data == null) {
+            return null;
+        }
+        return new IP(data.data);
     }
 
-    public IP() {
-        super(LENGTH);
+    private IP(byte[] data) {
+        super(data);
     }
 
     public String toString(){

@@ -2,6 +2,7 @@ package in.prasannathapa.db;
 
 import in.prasannathapa.db.data.BucketNode;
 import in.prasannathapa.db.data.Data;
+import in.prasannathapa.db.data.FixedRecord;
 
 import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.nio.channels.FileChannel;
 
 import static in.prasannathapa.db.data.BucketNode.NOT_WRITTEN;
 
-class DBWriter<K extends Data, V extends Data> implements AutoCloseable{
+class DBWriter<K extends FixedRecord, V extends FixedRecord> implements AutoCloseable{
 
     public final MetaData metaData;
     private final MappedByteBuffer[] buffers = new MappedByteBuffer[Resource.values().length];

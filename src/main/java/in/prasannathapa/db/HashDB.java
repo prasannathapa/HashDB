@@ -1,17 +1,17 @@
 package in.prasannathapa.db;
 
 import in.prasannathapa.db.data.Data;
+import in.prasannathapa.db.data.FixedRecord;
 
 import javax.naming.SizeLimitExceededException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.security.InvalidKeyException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class HashDB<K extends Data, V extends Data> implements AutoCloseable {
+public class HashDB<K extends FixedRecord, V extends FixedRecord> implements AutoCloseable {
     public static final String DB_DIR = System.getProperty("user.home") + File.separator + "HashDB"; //NO I18N
     public static final int cores = Runtime.getRuntime().availableProcessors();
     private static final Map<String, HashDB<?,?>> instanceMap = new Hashtable<>();
@@ -48,7 +48,7 @@ public class HashDB<K extends Data, V extends Data> implements AutoCloseable {
     }
 
     //Creates a new Instance, deletes the old one if already existing
-    public synchronized static <K extends Data, V extends Data> HashDB<K, V> createDB(int keyLength, int valueLength, int size, String dbName) throws SizeLimitExceededException, IOException {
+    public synchronized static <K extends FixedRecord, V extends FixedRecord> HashDB<K, V> createDB(int keyLength, int valueLength, int size, String dbName) throws SizeLimitExceededException, IOException {
         HashDB<?, ?> existingDb = instanceMap.get(dbName);
         if (existingDb != null) {
             existingDb.close();

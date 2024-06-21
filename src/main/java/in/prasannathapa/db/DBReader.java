@@ -2,12 +2,13 @@ package in.prasannathapa.db;
 
 import in.prasannathapa.db.data.BucketNode;
 import in.prasannathapa.db.data.Data;
+import in.prasannathapa.db.data.FixedRecord;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-class DBReader<K extends Data> implements AutoCloseable {
+class DBReader<K extends FixedRecord> implements AutoCloseable {
     public final DBUtil dbUtil;
     private final MetaData metaData;
     private MappedByteBuffer indexReader;
