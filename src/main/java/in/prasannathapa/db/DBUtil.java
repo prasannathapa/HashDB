@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 class DBUtil implements AutoCloseable{
@@ -19,13 +20,18 @@ class DBUtil implements AutoCloseable{
 
     private final RandomAccessFile[] resourceFiles = new RandomAccessFile[Resource.values().length] ;
 
-    private final int[] diskSize = new int[resourceFiles.length];
+    private final long[] diskSize = new long[resourceFiles.length];
     public final FileChannel[] channels = new FileChannel[resourceFiles.length];
-    public DBUtil(String dbName) throws FileNotFoundException {
+    public DBUtil(String dbName) throws IOException {
         this.dbName = dbName;
         for(Resource resource: Resource.values()){
-            resourceFiles[resource.ordinal()] = new RandomAccessFile(String.join(File.separator, HashDB.DB_DIR,dbName,resource.name()), "rw");
+            String path = String.join(File.separator, HashDB.DB_DIR, dbName, resource.name());
+            if (Files.notExists(Path.of(path))) {
+                throw new IOException("DB Does not Exist");
+            }
+            resourceFiles[resource.ordinal()] = new RandomAccessFile(path, "rw");
             channels[resource.ordinal()] = resourceFiles[resource.ordinal()].getChannel();
+            diskSize[resource.ordinal()] = channels[resource.ordinal()].size();
         }
     }
     public DBUtil(int keyLength, int valueLength, int entries, String dbName) throws IOException, SizeLimitExceededException {

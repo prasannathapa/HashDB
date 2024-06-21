@@ -1,6 +1,5 @@
 package in.prasannathapa.db;
 
-import in.prasannathapa.db.data.Data;
 import in.prasannathapa.db.data.FixedRecord;
 
 import javax.naming.SizeLimitExceededException;
@@ -11,10 +10,10 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class HashDB<K extends FixedRecord, V extends FixedRecord> implements AutoCloseable {
+public class HashDB<K extends FixedRecord, V extends FixedRecord> {
     public static final String DB_DIR = System.getProperty("user.home") + File.separator + "HashDB"; //NO I18N
     public static final int cores = Runtime.getRuntime().availableProcessors();
-    private static final Map<String, HashDB<?,?>> instanceMap = new Hashtable<>();
+    private static final Map<String, HashDB> instanceMap = new Hashtable<>();
 
     static {
         new File(DB_DIR).mkdirs();
@@ -57,38 +56,45 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> implements Aut
         instanceMap.put(dbName, db);
         return db;
     }
-
-    public static HashDB<?,?> readFrom(String dbName) throws IOException {
-        HashDB<?,?>  db = instanceMap.get(dbName);
+    public synchronized static void closeDB(String dbName) throws IOException {
+        HashDB<?,?> existingDb = instanceMap.get(dbName);
+        if (existingDb != null) {
+            existingDb.close();
+        }
+        instanceMap.remove(dbName);
+    }
+    public static <K extends FixedRecord, V extends FixedRecord> HashDB<K, V> readFrom(String dbName) throws IOException {
+        HashDB<K,V>  db = instanceMap.get(dbName);
         if (db != null) {
             return db;
         }
-        return instanceMap.put(dbName, new HashDB<>(dbName));
+        db = new HashDB<>(dbName);
+        instanceMap.put(dbName, db);
+        return db;
     }
-    public static void delete(String dbName) throws IOException {
-        instanceMap.remove(dbName);
+    public static void deleteDB(String dbName) throws IOException {
+        HashDB db = instanceMap.get(dbName);
+        if (db != null) {
+            db.close();
+            instanceMap.remove(dbName);
+        }
         DBUtil.delete(dbName);
     }
     public void put(K key, V data) throws SizeLimitExceededException {
         writer.put(key, data);
     }
 
-    public void remove(K key) {
-        writer.remove(key);
+    public FixedRecord remove(K key) {
+        return writer.remove(key);
     }
 
-    @Override
-    public void close() throws IOException {
+    private void close() throws IOException {
         util.close();
         metaData.close();
         writer.close();
         for (DBReader<K> reader : readers) {
             reader.close();
         }
-    }
-
-    public void delete() throws IOException {
-        util.delete();
     }
 
     public FixedRecord get(K key) {

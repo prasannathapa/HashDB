@@ -32,20 +32,23 @@ class DBWriter<K extends FixedRecord, V extends FixedRecord> implements AutoClos
         }
     }
 
-    public synchronized void remove(K key) {
+    public synchronized FixedRecord remove(K key) {
         Data dbKey = new Data(metaData.getKeySize());
+        FixedRecord value = null;
         int bucket = metaData.getBucket(key);
         int bucketPointer = bucket * Integer.BYTES;
         MappedByteBuffer idxBuffer = buffers[Resource.INDEX.ordinal()].position(bucketPointer);
         MappedByteBuffer dataBuffer = buffers[Resource.DATA.ordinal()];
         int pos = idxBuffer.getInt();
         if(pos == NOT_WRITTEN){
-            return;
+            return null;
         } else if(pos >= 0) {
             dbKey.read(dataBuffer,pos);
             if(dbKey.matches(key)) {
                 idxBuffer.putInt(bucketPointer, NOT_WRITTEN);
                 createBubble(Resource.DATA_BUBBLE, pos);
+                value = new Data(metaData.getValueSize());
+                value.read(dataBuffer,pos + metaData.getKeySize());
             }
         } else {
             pos = (pos == Integer.MIN_VALUE ? 0 : -pos);
@@ -56,18 +59,22 @@ class DBWriter<K extends FixedRecord, V extends FixedRecord> implements AutoClos
                 //if -1, write -1 else invert to neg pointer
                 idxBuffer.putInt(bucketPointer,-Math.abs(linkedList.nextPosition));
                 createBubble(Resource.COLLISION_BUBBLE,linkedList.currentPosition);
-                return;
-            }
-            // Traverse the linked list to find and remove the node
-            while (linkedList.hasNext()) {
-                linkedList.readNext();
-                if (linkedList.matches(key)) {
-                    createBubble(Resource.COLLISION_BUBBLE, linkedList.deleteNode());
-                    return;
+                value = new Data(metaData.getValueSize());
+                value.read(dataBuffer,linkedList.currentPosition + metaData.getKeySize());
+            } else {
+                // Traverse the linked list to find and remove the node
+                while (linkedList.hasNext()) {
+                    linkedList.readNext();
+                    if (linkedList.matches(key)) {
+                        createBubble(Resource.COLLISION_BUBBLE, linkedList.deleteNode());
+                        value = new Data(metaData.getValueSize());
+                        value.read(dataBuffer,linkedList.currentPosition + metaData.getKeySize());
+                    }
                 }
             }
         }
         metaData.update();
+        return value;
     }
     public synchronized void put(K key, V value) throws SizeLimitExceededException {
         int bubble;

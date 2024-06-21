@@ -9,13 +9,11 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 class DBReader<K extends FixedRecord> implements AutoCloseable {
-    public final DBUtil dbUtil;
     private final MetaData metaData;
     private MappedByteBuffer indexReader;
     private MappedByteBuffer collisionReader;
     private MappedByteBuffer dataReader;
     public DBReader(DBUtil dbUtil, MetaData metaData) throws IOException {
-        this.dbUtil = dbUtil;
         this.metaData = metaData;
         indexReader = dbUtil.getBuffer(Resource.INDEX, FileChannel.MapMode.READ_ONLY);
         collisionReader = dbUtil.getBuffer(Resource.COLLISION, FileChannel.MapMode.READ_ONLY);
