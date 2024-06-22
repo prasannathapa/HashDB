@@ -38,7 +38,7 @@ public class Server extends UnicastRemoteObject implements RemoteHashDB{
 
     @Override
     public void createDB(String dataSpace, int keySize, int valueSize, int maxEntries) throws SizeLimitExceededException, IOException {
-        HashDB.createDB(keySize, valueSize, 1000, dataSpace);
+        HashDB.createDB(keySize, valueSize, maxEntries, dataSpace);
     }
 
     @Override
