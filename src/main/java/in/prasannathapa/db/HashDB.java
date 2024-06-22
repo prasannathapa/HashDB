@@ -15,9 +15,7 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
     public static final int cores = Runtime.getRuntime().availableProcessors();
     private static final Map<String, HashDB<FixedRecord,FixedRecord>> instanceMap = new Hashtable<>();
 
-    static {
-        new File(DB_DIR).mkdirs();
-    }
+    static { new File(DB_DIR).mkdirs(); }
 
     public final String dbName;
     private final DBWriter<K,V> writer;
@@ -73,7 +71,7 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
         return (HashDB<K, V>) db;
     }
     public static void deleteDB(String dbName) throws IOException {
-        HashDB db = instanceMap.get(dbName);
+        HashDB<FixedRecord, FixedRecord> db = instanceMap.get(dbName);
         if (db != null) {
             db.close();
             instanceMap.remove(dbName);
