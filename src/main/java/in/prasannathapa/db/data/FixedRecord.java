@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public abstract class FixedRecord implements Externalizable {
+    private static final long serialVersionUID = 1L;
+
     protected byte[] data;
     private int size = 0;
     private static final HashFunction MURMUR3_128 = Hashing.murmur3_128();

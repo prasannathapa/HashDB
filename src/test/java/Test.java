@@ -11,7 +11,7 @@ import java.rmi.registry.LocateRegistry;
 public class Test {
 
     public static String host = "prasanna-14854-t";
-    public static int port = 1090;
+    public static int port = 1099;
     public static void remoteTest() throws IOException, NotBoundException, SizeLimitExceededException {
         RemoteHashDB client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
         String dbName = "TestDB";

@@ -31,12 +31,13 @@ public class RemoteBenchmark {
     @Param({"2", "10", "25", "50", "100"})
     private int dataSize;
     public static String host = "prasanna-14854-t";
-    public static int port = 1090;
+    public static int port = 1099;
     RemoteHashDB client;
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
     private static final int BATCH_SIZE = 200;
+    private static final int ENTRIES = 1000;
     @Setup(Level.Trial)
     public void setUp() throws IOException, NotBoundException, SizeLimitExceededException {
         dbName = "hashDB_" + keySize + "_" + dataSize;
@@ -46,10 +47,10 @@ public class RemoteBenchmark {
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
-        client.createDB(dbName,keySize,dataSize,15_000_000);
+        client.createDB(dbName,keySize,dataSize,ENTRIES);
         FixedRecord[] keys = new FixedRecord[BATCH_SIZE];
         FixedRecord[] values = new FixedRecord[BATCH_SIZE];
-        for(int b = 0; b < 15_000_000/BATCH_SIZE; b++){
+        for(int b = 0; b < ENTRIES/BATCH_SIZE; b++){
             for(int i = 0; i < BATCH_SIZE; i++){
                 keys[i] = new Data(putSeq.getNextKey());
                 values[i] = new Data(dataSize);
@@ -74,7 +75,7 @@ public class RemoteBenchmark {
         for(int i = 0; i < BATCH_SIZE; i++){
             keys[i] = new Data(getSeq.getNextKey());
         }
-        bh.consume(client.getAll(dbName,keys));
+        client.getAll(dbName,keys);
     }
 
     @Threads(16)
