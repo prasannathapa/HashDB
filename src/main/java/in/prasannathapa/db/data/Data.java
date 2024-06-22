@@ -1,6 +1,7 @@
 package in.prasannathapa.db.data;
 
 public class Data extends FixedRecord{
+    private static final long serialVersionUID = 2;
     public Data(int keySize) {
         super(keySize);
     }

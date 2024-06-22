@@ -15,6 +15,7 @@ import utils.SequenceGenerator;
 import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
 import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +33,16 @@ public class RemoteBenchmark {
     private int dataSize;
     public static String host = "prasanna-14854-t";
     public static int port = 1099;
-    RemoteHashDB client;
+    final RemoteHashDB client;
+
+    {
+        try {
+            client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
+        } catch (RemoteException | NotBoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
@@ -43,7 +53,6 @@ public class RemoteBenchmark {
         dbName = "hashDB_" + keySize + "_" + dataSize;
         System.out.println("Setup for");
         System.out.println("KeySize: " + keySize + " DataSize: " + dataSize);
-        client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
