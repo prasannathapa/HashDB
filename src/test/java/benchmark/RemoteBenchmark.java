@@ -46,8 +46,8 @@ public class RemoteBenchmark {
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
-    private static final int BATCH_SIZE = 200;
-    private static final int ENTRIES = 1000;
+    private static final int BATCH_SIZE = 500;
+    private static final int ENTRIES = 2000;
     @Setup(Level.Trial)
     public void setUp() throws IOException, NotBoundException, SizeLimitExceededException {
         dbName = "hashDB_" + keySize + "_" + dataSize;
