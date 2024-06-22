@@ -14,7 +14,7 @@ class MetaData extends FixedRecord implements AutoCloseable{
     private int keySize, valueSize, entries, buckets;
     private long dataFileSizeLimit;
     private final int[] endPointers = new int[Resource.values().length];
-    private final MappedByteBuffer fileBuffer;
+    private MappedByteBuffer fileBuffer;
     public MetaData(MappedByteBuffer fileBuffer)  {
         super(BYTES);
         this.fileBuffer = fileBuffer;
@@ -53,7 +53,7 @@ class MetaData extends FixedRecord implements AutoCloseable{
     }
 
     public int getBucket(FixedRecord key) {
-        return (int) (((long)Integer.MAX_VALUE + key.hashCode()) % buckets);
+        return (int) (((long)Integer.MAX_VALUE + 1 + key.hashCode()) % buckets);
     }
 
     public void update(){

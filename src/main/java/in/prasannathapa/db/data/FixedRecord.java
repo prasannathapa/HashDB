@@ -1,5 +1,8 @@
 package in.prasannathapa.db.data;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -10,6 +13,7 @@ import java.util.Arrays;
 public abstract class FixedRecord implements Externalizable {
     protected byte[] data;
     private int size = 0;
+    private static final HashFunction MURMUR3_128 = Hashing.murmur3_128();
 
     public FixedRecord(int size){
         this.data = new byte[size];
@@ -46,7 +50,7 @@ public abstract class FixedRecord implements Externalizable {
         return Arrays.equals(this.data, data.data);
     }
     public int hashCode(){
-        return Arrays.hashCode(data);
+        return  MURMUR3_128.hashBytes(data).asInt();
     }
 
     @Override

@@ -45,12 +45,12 @@ class DBUtil implements AutoCloseable{
         int buckets = MetaData.getBucketSize(entries);
         int bucketSize = buckets * Integer.BYTES;
         int collisionRecordSize = Integer.BYTES * 2;
-        int collisionMaxFileSize = entries * collisionRecordSize; //Assuming everything collided
+        long collisionMaxFileSize = Math.min(Integer.MAX_VALUE,(long)entries * collisionRecordSize); //Assuming everything collided
         diskSize[Resource.DATA.ordinal()] = (int) fileSize;
         diskSize[Resource.INDEX.ordinal()] = bucketSize;
         diskSize[Resource.COLLISION.ordinal()] = collisionMaxFileSize;
-        diskSize[Resource.COLLISION_BUBBLE.ordinal()] = Integer.BYTES * entries;
-        diskSize[Resource.DATA_BUBBLE.ordinal()] = Integer.BYTES * entries;
+        diskSize[Resource.COLLISION_BUBBLE.ordinal()] = (long) Integer.BYTES * entries;
+        diskSize[Resource.DATA_BUBBLE.ordinal()] = (long) Integer.BYTES * entries;
         diskSize[Resource.META.ordinal()] = MetaData.BYTES;
         initializeChannels();
     }
