@@ -14,23 +14,20 @@ public abstract class FixedRecord implements Externalizable {
     private static final long serialVersionUID = 1L;
 
     protected byte[] data;
-    private int size = 0;
     private static final HashFunction MURMUR3_128 = Hashing.murmur3_128();
 
     public FixedRecord(int size){
         this.data = new byte[size];
-        this.size = data.length;
     }
     public FixedRecord(FixedRecord data){
         this.data = data.data;
-        this.size = data.data.length;
         onUpdate(data.data);
     }
     public FixedRecord() {}
 
     public void update(byte[] update){
-        assert update.length == size;
-        System.arraycopy(update, 0, data, 0, size);
+        assert update.length == data.length;
+        System.arraycopy(update, 0, data, 0, data.length);
     }
 
     protected abstract void onUpdate(byte[] data);
@@ -57,18 +54,18 @@ public abstract class FixedRecord implements Externalizable {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(size);
+        out.writeInt(data.length);
         out.write(data);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException {
-        size = in.readInt();
+        int size = in.readInt();
         data = new byte[size];
         in.read(data);
         onUpdate(data);
     }
     public final int size(){
-        return size;
+        return data.length;
     }
 }
