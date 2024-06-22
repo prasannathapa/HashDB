@@ -18,6 +18,9 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 - **Forced User Serialization**: Users define their serialization and deserialization methods to compact data based on user-defined classes implementing Key and Value interfaces.
 - **Operations Supported**: HashDB supports basic operations such as get, remove, and put.
 
+### Benchmarks
+![Benchmarks](https://docs.google.com/spreadsheets/d/e/2PACX-1vTM4r9J5Vh_Q5Gh8WwwupiXdrIkzA-6jSeEL8fAfgWiJS5dqxih_qyi-RXQX-lqrg3i_LKJ7Hii8mIP/pubchart?oid=1872308551&format=image)
+
 - **File Structure**: HashDB consists of the following files:
   - **INDEX**: Stores hash values for rapid lookup.
   - **COLLISION**: Handles collisions in the hash table.
@@ -26,6 +29,7 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
   - **DATA_BUBBLE**: Manages deleted data records similarly to COLLISION_BUBBLE.
   - **META**: Stores end pointers for each file and key-data sizes.
 ![DB Structure](https://github.com/prasannathapa/HashDB/blob/main/doc/structure.png?raw=true)
+
 
 ### Drawbacks
 - **Iteration**: Cant iterate over the data in sorted way or can do binary floor or ceil search on data
