@@ -65,7 +65,7 @@ public abstract class FixedRecord implements Externalizable {
         synchronized (this) {
             int size = in.readInt();
             data = new byte[size];
-            in.read(data);
+            in.readFully(data);
             onUpdate(data);
         }
     }
