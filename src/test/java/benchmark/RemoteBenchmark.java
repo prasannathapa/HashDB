@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Fork(1)
-@Warmup(iterations = 2, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 2, time = 10)
+@Measurement(iterations = 5, time = 10)
 public class RemoteBenchmark {
     @Param({"4", "6", "16", "32"})
     private int keySize;
@@ -110,7 +110,7 @@ public class RemoteBenchmark {
         if (args.length > 2) {
             BATCH_SIZE = Integer.parseInt(args[2]);
         }
-        Options opt = new OptionsBuilder().include(RemoteBenchmark.class.getSimpleName()).forks(1).measurementBatchSize(BATCH_SIZE).build();
+        Options opt = new OptionsBuilder().include(RemoteBenchmark.class.getSimpleName()).forks(1).build();
         new Runner(opt).run();
     }
 }
