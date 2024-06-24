@@ -54,10 +54,8 @@ public abstract class FixedRecord implements Externalizable {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        synchronized (this) {
-            out.writeInt(data.length);
-            out.write(data);
-        }
+        out.writeInt(data.length);
+        out.write(data);
     }
 
     @Override
