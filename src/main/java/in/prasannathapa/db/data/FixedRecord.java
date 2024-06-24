@@ -62,12 +62,10 @@ public abstract class FixedRecord implements Externalizable {
 
     @Override
     public void readExternal(ObjectInput in) throws IOException {
-        synchronized (this) {
-            int size = in.readInt();
-            data = new byte[size];
-            in.readFully(data);
-            onUpdate(data);
-        }
+        int size = in.readInt();
+        data = new byte[size];
+        in.readFully(data);
+        onUpdate(data);
     }
     public final int size(){
         return data.length;

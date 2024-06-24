@@ -46,26 +46,27 @@ public class RemoteBenchmark {
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
-    private static final int BATCH_SIZE = 200;
+    private static int BATCH_SIZE = 200;
     private static final int ENTRIES = 15_000_000;
     @Setup(Level.Trial)
     public void setUp() throws IOException, NotBoundException, SizeLimitExceededException {
         dbName = "hashDB_" + keySize + "_" + dataSize;
-        System.out.println("Setup for");
-        System.out.println("KeySize: " + keySize + " DataSize: " + dataSize);
+        System.out.println("Setup for KeySize: " + keySize + " DataSize: " + dataSize);
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
         client.createDB(dbName,keySize,dataSize,ENTRIES);
-        FixedRecord[] keys = new FixedRecord[BATCH_SIZE];
-        FixedRecord[] values = new FixedRecord[BATCH_SIZE];
-        for(int b = 0; b < ENTRIES/BATCH_SIZE; b++){
-            for(int i = 0; i < BATCH_SIZE; i++){
+        int batch = ENTRIES/100;
+        FixedRecord[] keys = new FixedRecord[batch];
+        FixedRecord[] values = new FixedRecord[batch];
+        for(int b = 0; b < ENTRIES/batch; b++){
+            for(int i = 0; i < batch; i++){
                 keys[i] = new Data(putSeq.getNextKey());
                 values[i] = new Data(dataSize);
             }
             client.putAll(dbName,keys,values);
         }
+        System.out.println("Completed!");
     }
 
     @TearDown(Level.Trial)
@@ -100,7 +101,16 @@ public class RemoteBenchmark {
     }
 
     public static void main(String[] args) throws RunnerException {
-        Options opt = new OptionsBuilder().include(RemoteBenchmark.class.getSimpleName()).forks(1).build();
+        if (args.length > 0) {
+            host = args[0];
+        }
+        if (args.length > 1) {
+            port = Integer.parseInt(args[1]);
+        }
+        if (args.length > 2) {
+            BATCH_SIZE = Integer.parseInt(args[2]);
+        }
+        Options opt = new OptionsBuilder().include(RemoteBenchmark.class.getSimpleName()).forks(1).measurementBatchSize(BATCH_SIZE).build();
         new Runner(opt).run();
     }
 }
