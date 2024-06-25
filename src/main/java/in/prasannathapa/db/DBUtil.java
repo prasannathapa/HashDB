@@ -113,9 +113,8 @@ class DBUtil implements AutoCloseable{
         delete(dbName);
     }
     public static void delete(String dbName) throws IOException {
-        for (Resource resource : Resource.values()) {
-            String filePath = String.join(File.separator, HashDB.DB_DIR, dbName, resource.name());
-            Files.deleteIfExists(Paths.get(filePath));
-        }
+        Path path = Paths.get(HashDB.DB_DIR + File.separator + dbName);
+        Files.walk(path).map(Path::toFile).forEach(File::delete);
+        Files.deleteIfExists(path);
     }
 }
