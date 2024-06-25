@@ -11,7 +11,6 @@ import utils.SequenceGenerator;
 import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
 import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.concurrent.TimeUnit;
 
@@ -39,40 +38,28 @@ public class RemoteBenchmark {
     private int entries;
     private RemoteHashDB client;
 
-    public void setup() throws RemoteException, NotBoundException {
-        if(client == null){
-            client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
-        }
-        dbName = "hashDB_" + keySize + "_" + dataSize;
-        System.out.println("\n====================================");
-        System.out.println("HashDB Remote benchmark:");
-        System.out.println("host: " + host + ":" + port);
-        System.out.println("Batch: " + batchSize);
-        System.out.println("entries: " + entries);
-        System.out.println("key size: " + keySize);
-        System.out.println("value size: " + dataSize);
-        System.out.println("====================================\n");
-    }
-
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
     @Setup(Level.Trial)
     public void setUp() throws IOException, SizeLimitExceededException, NotBoundException {
-        setup();
+        if (client == null) {
+            client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
+        }
+        dbName = "hashDB_" + keySize + "_" + dataSize;
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
-        client.createDB(dbName,keySize,dataSize,entries);
-        int batch = Math.min(entries/batchSize,entries);
+        client.createDB(dbName, keySize, dataSize, entries);
+        int batch = Math.min(entries / batchSize, entries);
         FixedRecord[] keys = new FixedRecord[batch];
         FixedRecord[] values = new FixedRecord[batch];
-        for(int b = 0; b < entries/batch; b++){
-            for(int i = 0; i < batch; i++){
+        for (int b = 0; b < entries / batch; b++) {
+            for (int i = 0; i < batch; i++) {
                 keys[i] = new Data(putSeq.getNextKey());
                 values[i] = new Data(dataSize);
             }
-            client.putAll(dbName,keys,values);
+            client.putAll(dbName, keys, values);
         }
         System.out.println("Setup Done!");
     }
@@ -80,7 +67,7 @@ public class RemoteBenchmark {
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
         client.deleteDB(dbName);
-        System.out.println("Teardown: "+dbName);
+        System.out.println("Teardown: " + dbName);
     }
 
 
@@ -90,10 +77,10 @@ public class RemoteBenchmark {
     @OutputTimeUnit(TimeUnit.SECONDS)
     public void benchmarkGet(Blackhole bh) throws IOException {
         FixedRecord[] keys = new FixedRecord[batchSize];
-        for(int i = 0; i < batchSize; i++){
+        for (int i = 0; i < batchSize; i++) {
             keys[i] = new Data(getSeq.getNextKey());
         }
-        bh.consume(client.getAll(dbName,keys));
+        bh.consume(client.getAll(dbName, keys));
     }
 
     @Threads(16)
@@ -102,9 +89,9 @@ public class RemoteBenchmark {
     @OutputTimeUnit(TimeUnit.SECONDS)
     public void benchmarkRemove(Blackhole bh) throws IOException {
         FixedRecord[] keys = new FixedRecord[batchSize];
-        for(int i = 0; i < batchSize; i++){
+        for (int i = 0; i < batchSize; i++) {
             keys[i] = new Data(remSeq.getNextKey());
         }
-        client.removeAll(dbName,keys);
+        client.removeAll(dbName, keys);
     }
 }

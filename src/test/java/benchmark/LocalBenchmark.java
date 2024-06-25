@@ -35,17 +35,9 @@ public class LocalBenchmark {
     @Param({"5000000"})
     private int entries;
 
-    private void setup() {
-        dbName = "HashDB_" + keySize + "_" + dataSize;
-        System.out.println("\n====================================");
-        System.out.println("HashDB Local benchmark:");
-        System.out.println("entries: " + entries);
-        System.out.println("key size: " + keySize);
-        System.out.println("Value size: " + dataSize);
-        System.out.println("====================================\n");
-    }
     @Setup(Level.Trial)
     public void setUp() throws SizeLimitExceededException, IOException {
+        dbName = "HashDB_" + keySize + "_" + dataSize;
         db = HashDB.createDB(keySize, dataSize, entries, dbName);
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
