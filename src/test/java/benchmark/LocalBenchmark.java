@@ -45,7 +45,6 @@ public class LocalBenchmark {
         for(int i = 0; i < entries; i++){
             db.put(new Data(putSeq.getNextKey()), new Data(dataSize));
         }
-        System.out.println("Completed!");
     }
 
     @TearDown(Level.Trial)
