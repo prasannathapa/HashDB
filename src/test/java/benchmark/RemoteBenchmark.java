@@ -51,7 +51,7 @@ public class RemoteBenchmark {
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
         client.createDB(dbName, keySize, dataSize, entries);
-        int batch = Math.min(entries / batchSize, entries);
+        int batch = entries / Math.min(batchSize, entries);
         FixedRecord[] keys = new FixedRecord[batch];
         FixedRecord[] values = new FixedRecord[batch];
         for (int b = 0; b < entries / batch; b++) {
