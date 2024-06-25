@@ -35,21 +35,27 @@ public class RemoteBenchmark {
     public static int port = 1099;
     final RemoteHashDB client;
 
-    {
+    public RemoteBenchmark() {
         try {
             client = (RemoteHashDB) LocateRegistry.getRegistry(host, port).lookup(HashDB.class.getName());
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("\n====================================");
+        System.out.println("HashDB Remote benchmark:");
+        System.out.println("host: " + RemoteBenchmark.host + ":" + RemoteBenchmark.port);
+        System.out.println("Batch: " + RemoteBenchmark.BATCH_SIZE);
+        System.out.println("Entries: " + RemoteBenchmark.ENTRIES);
+        System.out.println("====================================\n");
     }
 
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
 
-    private static int BATCH_SIZE = 200;
-    private static final int ENTRIES = 15_000_000;
+    static int BATCH_SIZE = 200;
+    static int ENTRIES = 500_000;
     @Setup(Level.Trial)
-    public void setUp() throws IOException, NotBoundException, SizeLimitExceededException {
+    public void setUp() throws IOException, SizeLimitExceededException {
         dbName = "hashDB_" + keySize + "_" + dataSize;
         System.out.println("Setup for KeySize: " + keySize + " DataSize: " + dataSize);
         putSeq = new SequenceGenerator(0, keySize);

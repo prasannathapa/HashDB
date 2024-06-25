@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 @Warmup(iterations = 2, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-public class HashDBBenchmark {
-    @Param({"4", "6", "16", "32"})
+public class LocalBenchmark {
+    @Param({"4", "8", "16", "32"})
     private int keySize;
 
     @Param({"2", "5", "10", "25", "50", "100"})
@@ -32,19 +32,26 @@ public class HashDBBenchmark {
     private HashDB<FixedRecord, FixedRecord> db;
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
+    static int ENTRIES = 500_000;
 
+    public LocalBenchmark() {
+        System.out.println("\n====================================");
+        System.out.println("HashDB Local benchmark:");
+        System.out.println("Entries: " + LocalBenchmark.ENTRIES);
+        System.out.println("====================================\n");
+    }
     @Setup(Level.Trial)
     public void setUp() throws SizeLimitExceededException, IOException {
         dbName = "hashDB_" + keySize + "_" + dataSize;
-        System.out.println("Setup for");
-        System.out.println("KeySize: " + keySize + " DataSize: " + dataSize);
-        db = HashDB.createDB(keySize, dataSize, 15_000_000, dbName);
+        System.out.println("Setup for KeySize: " + keySize + " DataSize: " + dataSize);
+        db = HashDB.createDB(keySize, dataSize, ENTRIES, dbName);
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
-        for(int i = 0; i < 15_000_000; i++){
+        for(int i = 0; i < ENTRIES; i++){
             db.put(new Data(putSeq.getNextKey()), new Data(dataSize));
         }
+        System.out.println("Completed!");
     }
 
     @TearDown(Level.Trial)
@@ -68,10 +75,5 @@ public class HashDBBenchmark {
     @OutputTimeUnit(TimeUnit.SECONDS)
     public void benchmarkRemove(Blackhole bh) {
         bh.consume(db.remove(new Data(remSeq.getNextKey())));
-    }
-
-    public static void main(String[] args) throws RunnerException, SizeLimitExceededException, IOException {
-        Options opt = new OptionsBuilder().include(HashDBBenchmark.class.getSimpleName()).forks(1).build();
-        new Runner(opt).run();
     }
 }

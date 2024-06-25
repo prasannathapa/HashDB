@@ -12,7 +12,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class Server extends UnicastRemoteObject implements RemoteHashDB{
 
-    protected Server() throws RemoteException {
+    public Server() throws RemoteException {
         super();
     }
 
