@@ -105,18 +105,4 @@ public class RemoteBenchmark {
         }
         client.removeAll(dbName,keys);
     }
-
-    public static void main(String[] args) throws RunnerException {
-        if (args.length > 0) {
-            host = args[0];
-        }
-        if (args.length > 1) {
-            port = Integer.parseInt(args[1]);
-        }
-        if (args.length > 2) {
-            BATCH_SIZE = Integer.parseInt(args[2]);
-        }
-        Options opt = new OptionsBuilder().include(RemoteBenchmark.class.getSimpleName()).forks(1).build();
-        new Runner(opt).run();
-    }
 }
