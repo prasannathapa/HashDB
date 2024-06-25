@@ -16,7 +16,7 @@ public class BenchmarkApp {
             System.out.println("Usage:");
             System.out.println("  java -jar app.jar -test -h <host> -p <port> -e <entries> -b <batch size>");
             System.out.println("  java -jar app.jar -test -e <entries>");
-            System.out.println("  java -jar app.jar -serve -p <port>");
+            System.out.println("  java -jar app.jar -serve <port>");
             return;
         }
 
@@ -33,7 +33,7 @@ public class BenchmarkApp {
         try {
             String host = null; // Default host
             int port = 1099; // Default port
-            int entries = 500_000; // Default entries
+            int entries = 5000_000; // Default entries
             int batchSize = 200; // Default batch size
 
             // Parse arguments

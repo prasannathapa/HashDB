@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="HashDB">
+  <artifact type="jar" build-on-make="true" name="HashDB">
     <output-path>$PROJECT_DIR$/out/artifacts/HashDB</output-path>
     <root id="archive" name="HashDB.jar">
       <element id="module-output" name="HashDB" />
