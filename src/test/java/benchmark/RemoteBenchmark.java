@@ -61,13 +61,11 @@ public class RemoteBenchmark {
             }
             client.putAll(dbName, keys, values);
         }
-        System.out.println("Setup Done!");
     }
 
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
         client.deleteDB(dbName);
-        System.out.println("Teardown: " + dbName);
     }
 
 

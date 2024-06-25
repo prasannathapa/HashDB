@@ -50,7 +50,6 @@ public class LocalBenchmark {
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
         HashDB.deleteDB(dbName);
-        System.out.println("Teardown: "+dbName);
     }
 
 
