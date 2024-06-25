@@ -32,23 +32,25 @@ public class LocalBenchmark {
     private HashDB<FixedRecord, FixedRecord> db;
     private SequenceGenerator putSeq, getSeq, remSeq;
     private String dbName;
-    static int ENTRIES = 500_000;
+    @Param({"5000000"})
+    private int entries;
 
-    public LocalBenchmark() {
+    private void setup() {
+        dbName = "HashDB_" + keySize + "_" + dataSize;
         System.out.println("\n====================================");
         System.out.println("HashDB Local benchmark:");
-        System.out.println("Entries: " + LocalBenchmark.ENTRIES);
+        System.out.println("entries: " + entries);
+        System.out.println("key size: " + keySize);
+        System.out.println("Value size: " + dataSize);
         System.out.println("====================================\n");
     }
     @Setup(Level.Trial)
     public void setUp() throws SizeLimitExceededException, IOException {
-        dbName = "hashDB_" + keySize + "_" + dataSize;
-        System.out.println("Setup for KeySize: " + keySize + " DataSize: " + dataSize);
-        db = HashDB.createDB(keySize, dataSize, ENTRIES, dbName);
+        db = HashDB.createDB(keySize, dataSize, entries, dbName);
         putSeq = new SequenceGenerator(0, keySize);
         getSeq = new SequenceGenerator(0, keySize);
         remSeq = new SequenceGenerator(1, keySize);
-        for(int i = 0; i < ENTRIES; i++){
+        for(int i = 0; i < entries; i++){
             db.put(new Data(putSeq.getNextKey()), new Data(dataSize));
         }
         System.out.println("Completed!");

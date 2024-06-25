@@ -1,12 +1,15 @@
 package benchmark;
 
 import in.prasannathapa.db.HashDB;
+import in.prasannathapa.db.data.Data;
 import in.prasannathapa.db.remote.Server;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import javax.naming.SizeLimitExceededException;
+import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -15,7 +18,7 @@ public class BenchmarkApp {
         if (args.length < 1) {
             System.out.println("Usage:");
             System.out.println("  java -jar app.jar -test -h <host> -p <port> -e <entries> -b <batch size>");
-            System.out.println("  java -jar app.jar -test -e <entries> -b <batch size>");
+            System.out.println("  java -jar app.jar -test -e <entries>");
             System.out.println("  java -jar app.jar -serve -p <port>");
             return;
         }
@@ -64,23 +67,24 @@ public class BenchmarkApp {
 
             if (host != null && port > 0 && entries > 0 && batchSize > 0) {
                 // Remote benchmarking
-                RemoteBenchmark.host = host;
-                RemoteBenchmark.port = port;
-                RemoteBenchmark.BATCH_SIZE = batchSize;
-                RemoteBenchmark.ENTRIES = entries;
-
                 Options opt = new OptionsBuilder()
                         .include(RemoteBenchmark.class.getSimpleName())
+                        .forks(1)
+                        .param("host", host)
+                        .param("port", Integer.toString(port))
+                        .param("entries", Integer.toString(entries))
+                        .param("batchSize", Integer.toString(batchSize))
+                        .build();
+                new Runner(opt).run();
+            } else if(host == null && entries > 0) {
+                Options opt = new OptionsBuilder()
+                        .include(LocalBenchmark.class.getSimpleName())
+                        .param("entries", Integer.toString(entries))
                         .forks(1)
                         .build();
                 new Runner(opt).run();
             } else {
-                LocalBenchmark.ENTRIES = entries;
-                Options opt = new OptionsBuilder()
-                        .include(LocalBenchmark.class.getSimpleName())
-                        .forks(1)
-                        .build();
-                new Runner(opt).run();
+                System.out.println("Invalid Arguments");
             }
         } catch (NumberFormatException | RunnerException e) {
             System.out.println("Error parsing arguments: " + e.getMessage());
