@@ -22,7 +22,7 @@ public class LocalBenchmark {
     @Param({"4", "8", "16", "32"})
     private int keySize;
 
-    @Param({"2", "5", "10", "25", "50", "100"})
+    @Param({"2", "10", "50", "100"})
     private int dataSize;
 
     private HashDB<FixedRecord, FixedRecord> db;

@@ -21,10 +21,10 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 2, time = 10)
 @Measurement(iterations = 5, time = 10)
 public class RemoteBenchmark {
-    @Param({"4", "88", "16", "32"})
+    @Param({"4", "8", "16", "32"})
     private int keySize;
 
-    @Param({"2", "10", "25", "50", "100"})
+    @Param({"2", "10", "50", "100"})
     private int dataSize;
 
     @Param({"localhost"})
