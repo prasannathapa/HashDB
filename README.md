@@ -22,7 +22,7 @@ HashDB sacrifices features like sorted iteration and complex indexing (e.g., B/B
 ![Benchmarks](https://docs.google.com/spreadsheets/d/e/2PACX-1vTM4r9J5Vh_Q5Gh8WwwupiXdrIkzA-6jSeEL8fAfgWiJS5dqxih_qyi-RXQX-lqrg3i_LKJ7Hii8mIP/pubchart?oid=227020497&format=image)
 
 ### Benchmarks (Remote server)
-![DB Remote benchmark](https://docs.google.com/spreadsheets/d/e/2PACX-1vTM4r9J5Vh_Q5Gh8WwwupiXdrIkzA-6jSeEL8fAfgWiJS5dqxih_qyi-RXQX-lqrg3i_LKJ7Hii8mIP/pubchart?oid=1380546178&format=image)
+![DB Remote benchmark](https://docs.google.com/spreadsheets/d/e/2PACX-1vTM4r9J5Vh_Q5Gh8WwwupiXdrIkzA-6jSeEL8fAfgWiJS5dqxih_qyi-RXQX-lqrg3i_LKJ7Hii8mIP/pubchart?oid=428052354&format=image)
 
 - **File Structure**: HashDB consists of the following files:
   - **INDEX**: Stores hash values for rapid lookup.
