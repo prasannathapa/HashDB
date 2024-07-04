@@ -38,6 +38,7 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
         this.dbName = dbName;
         this.util = new DBUtil(dbName);
         this.metaData = new MetaData(util.getBuffer(Resource.META, FileChannel.MapMode.READ_WRITE));
+
         this.writer = new DBWriter<>(metaData,util);
         for (int i = 0; i < readers.length; i++) {
             readers[i] = new DBReader<>(util, writer.metaData);
@@ -87,12 +88,12 @@ public class HashDB<K extends FixedRecord, V extends FixedRecord> {
     }
 
     private void close() throws IOException {
-        util.close();
         metaData.close();
         writer.close();
         for (DBReader<K> reader : readers) {
             reader.close();
         }
+        util.close(metaData);
     }
 
     public FixedRecord get(K key) {

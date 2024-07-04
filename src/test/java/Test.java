@@ -33,7 +33,7 @@ public class Test {
     }
     public static void localTest() throws SizeLimitExceededException, IOException {
         String dbName = "TestDB";
-        HashDB<IP, IP> db = HashDB.createDB(IP.LENGTH, IP.LENGTH, 1000, dbName);
+        HashDB<IP, IP> db = HashDB.createDB(IP.LENGTH, IP.LENGTH, 10000, dbName);
 
         IP ip1 = new IP("129.168.2.1");
         IP ip2 = new IP("129.168.2.2");
@@ -54,7 +54,7 @@ public class Test {
         HashDB.deleteDB(dbName);
     }
     public static void main(String[] args) throws Exception {
-        remoteTest();
+        //remoteTest();
         localTest();
     }
 }

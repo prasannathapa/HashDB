@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-class DBUtil implements AutoCloseable{
+class DBUtil {
     public final String dbName;
 
     private final RandomAccessFile[] resourceFiles = new RandomAccessFile[Resource.values().length] ;
@@ -24,14 +24,40 @@ class DBUtil implements AutoCloseable{
     public final FileChannel[] channels = new FileChannel[resourceFiles.length];
     public DBUtil(String dbName) throws IOException {
         this.dbName = dbName;
-        for(Resource resource: Resource.values()){
+        for (Resource resource : Resource.values()) {
             String path = String.join(File.separator, HashDB.DB_DIR, dbName, resource.name());
             if (Files.notExists(Path.of(path))) {
                 throw new IOException("DB Does not Exist");
             }
             resourceFiles[resource.ordinal()] = new RandomAccessFile(path, "rw");
-            channels[resource.ordinal()] = resourceFiles[resource.ordinal()].getChannel();
-            diskSize[resource.ordinal()] = channels[resource.ordinal()].size();
+        }
+        //Pre initialise Meta
+        int metaIdx = Resource.META.ordinal();
+        diskSize[metaIdx] = MetaData.BYTES;
+        resourceFiles[metaIdx].setLength(MetaData.BYTES);
+        channels[metaIdx] = resourceFiles[metaIdx].getChannel();
+        MappedByteBuffer metaData = channels[metaIdx].map(FileChannel.MapMode.PRIVATE,0, Integer.BYTES * 3);
+        int keySize = metaData.getInt();
+        int valueSize = metaData.getInt();
+        int entrySize = metaData.getInt();
+        closeBuffer(metaData);
+        //initialise rest of the data using MetaData
+        long recordSize = keySize + valueSize;
+        long fileSize = recordSize * entrySize;
+        int buckets = MetaData.getBucketSize(entrySize);
+        int bucketSize = buckets * Integer.BYTES;
+        int collisionRecordSize = Integer.BYTES * 2;
+        long collisionMaxFileSize = Math.min(Integer.MAX_VALUE,(long)entrySize * collisionRecordSize); //Assuming everything collided
+        diskSize[Resource.DATA.ordinal()] = (int) fileSize;
+        diskSize[Resource.INDEX.ordinal()] = bucketSize;
+        diskSize[Resource.COLLISION.ordinal()] = collisionMaxFileSize;
+        diskSize[Resource.COLLISION_BUBBLE.ordinal()] = (long) Integer.BYTES * entrySize;
+        diskSize[Resource.DATA_BUBBLE.ordinal()] = (long) Integer.BYTES * entrySize;
+        for (Resource resource : Resource.values()) {
+            if(resource != Resource.META) {
+                resourceFiles[resource.ordinal()].setLength(diskSize[resource.ordinal()]);
+                channels[resource.ordinal()] = resourceFiles[resource.ordinal()].getChannel();
+            }
         }
     }
     public DBUtil(int keyLength, int valueLength, int entries, String dbName) throws IOException, SizeLimitExceededException {
@@ -72,12 +98,12 @@ class DBUtil implements AutoCloseable{
         return channels[resource.ordinal()].map(mode,0,diskSize[resource.ordinal()]);
     }
 
-    @Override
-    public void close() throws IOException {
+    public void close(MetaData metaData) throws IOException {
         for(Resource resource: Resource.values()){
             FileChannel c = channels[resource.ordinal()];
             RandomAccessFile r = resourceFiles[resource.ordinal()];
             if(c != null) {
+                c.truncate(metaData.getEndPointer(resource));
                 c.close();
             }
             if(r != null) {

@@ -2,6 +2,7 @@ package in.prasannathapa.db;
 
 import in.prasannathapa.db.data.FixedRecord;
 
+import javax.naming.SizeLimitExceededException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 
@@ -30,6 +31,10 @@ class MetaData extends FixedRecord implements AutoCloseable{
         this.buckets = getBucketSize(entries);
         this.dataFileSizeLimit = (long) entries * (keySize + valueSize);
         assert dataFileSizeLimit <= Integer.MAX_VALUE;
+
+        endPointers[Resource.INDEX.ordinal()] = getBucketSize(entries) * Integer.BYTES;
+        endPointers[Resource.META.ordinal()] = MetaData.BYTES;
+
         ByteBuffer heapBuffer = ByteBuffer.wrap(data);
         heapBuffer.putInt(keySize);
         heapBuffer.putInt(valueSize);
@@ -106,7 +111,16 @@ class MetaData extends FixedRecord implements AutoCloseable{
     }
 
     public void write() {
-        super.write(fileBuffer,0);
+        if(!fileBuffer.isReadOnly()) {
+            ByteBuffer heapBuffer = ByteBuffer.wrap(data);
+            heapBuffer.putInt(keySize);
+            heapBuffer.putInt(valueSize);
+            heapBuffer.putInt(entries);
+            for(Resource resource: Resource.values()){
+                heapBuffer.putInt(Math.abs(endPointers[resource.ordinal()]));
+            }
+            super.write(fileBuffer, 0);
+        }
     }
 
     @Override
