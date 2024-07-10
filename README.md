@@ -5,7 +5,7 @@
       <img src="https://github.com/prasannathapa/HashDB/raw/main/doc/hashDB.webp" alt="HashDB Logo" style="width: 100%;">
     </td>
     <td width="80%">
-      HashDB is a disk-based, extremely fast fixed-store Key-Value Store Database designed with a focus on speed and efficient data retrieval using hash-based indexing.
+      HashDB is a disk-based, highly efficient fixed-store Key-Value Store Database engineered for rapid data retrieval using hash-based indexing. It surpasses Redis, KeyDB, LMDB, RocksDB, SyllaDB, and likely all other alternatives out there! However, it does make certain trade-offs to achieve its performance.
     </td>
   </tr>
 </table>
